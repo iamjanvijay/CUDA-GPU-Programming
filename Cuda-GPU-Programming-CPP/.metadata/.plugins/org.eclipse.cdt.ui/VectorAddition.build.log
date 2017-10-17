@@ -1,0 +1,6 @@
+09:23:35 **** Incremental Build of configuration Debug for project VectorAddition ****
+make all 
+make: Nothing to be done for 'all'.
+
+09:23:35 Build Finished (took 61ms)
+

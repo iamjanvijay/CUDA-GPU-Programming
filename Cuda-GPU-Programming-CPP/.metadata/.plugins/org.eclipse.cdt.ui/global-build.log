@@ -1,0 +1,12 @@
+09:21:41 **** Incremental Build of configuration Debug for project VectorAdditionCpyMem ****
+make all 
+make: Nothing to be done for 'all'.
+09:21:43 **** Incremental Build of configuration Debug for project VectorAdditionCpyMem ****
+make all 
+make: Nothing to be done for 'all'.
+09:22:09 **** Build of configuration Debug for project MatrixMultiplicationGPU ****
+make all 
+make: Nothing to be done for 'all'.
+09:22:50 **** Incremental Build of configuration Debug for project MatrixMultiplicationGPU ****
+make all 
+make: Nothing to be done for 'all'.

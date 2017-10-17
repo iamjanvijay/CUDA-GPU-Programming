@@ -1,0 +1,92 @@
+/* Simple CPU executable code for Vector Addition
+ * CPU-ONLY-CODE
+ * Author : Janvijay Singh
+ */
+
+#include <bits/stdc++.h>
+#include <cuda_runtime.h>
+#include <helper_cuda.h>
+#define SIZE 100000000
+#define THREADSPERBLOCK 1024
+
+using namespace std;
+
+clock_t t1;
+
+// Function to perform Vector Addition
+// Function to be executed on GPU and will be called from the Host
+// Function to be run by many threads in parallel
+// To identify each thread use read-only variable threadIdx.x
+__global__ void VectorAdd(int *a, int *b, int *c, int n)
+{
+	int i = threadIdx.x;
+
+	// To check if current thread Id is less than number of elements in array
+	// To overcome any issues which might occur if number of threads launched turn
+	// out to be grater than number of elements in array
+	if(i<n)
+		c[i] = a[i] + b[i];
+}
+
+// 3 Steps : We'll we working with two memory spaces, CPU's and GPU's
+// Step 1. Data copied from CPU to GPU
+// Step 2. Launch Vector Addition kernel on the GPU
+// Step 3. Resulting data copied from GPU to CPU
+int main()
+{
+	cout << "Vector Addition on GPUs\n";
+
+	int *a, *b, *c;
+	int *d_a, *d_b, *d_c;
+
+	// Memory Allocation on CPU
+	a = (int *)malloc(SIZE * sizeof(int));
+	b = (int *)malloc(SIZE * sizeof(int));
+	c = (int *)malloc(SIZE * sizeof(int));
+
+	// Memory Allocation on GPU
+	cudaMalloc(&d_a, SIZE * sizeof(int));
+	cudaMalloc(&d_b, SIZE * sizeof(int));
+	cudaMalloc(&d_c, SIZE * sizeof(int));
+
+	// Initialization of array 'a', 'b' & 'c'
+	for(int i=0;i<SIZE;i++)
+	{
+		a[i] = i;
+		b[i] = i;
+		c[i] = 0;
+	}
+
+	// Copying values from CPU's memory space to GPU's memory space
+	cudaMemcpy(d_a, a, SIZE*sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_b, b, SIZE*sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_c, c, SIZE*sizeof(int), cudaMemcpyHostToDevice);
+
+	// Starting clock count
+	t1 = clock();
+
+	// Calling Vector Addition Function
+	VectorAdd<<< 1024, THREADSPERBLOCK>>>(d_a, d_b, d_c, SIZE);
+
+	// Printing out clock count after processing
+	cout << "Time utilized in processing : " << double(clock()-t1)/CLOCKS_PER_SEC << endl;
+
+	// Copying values from CPU's memory space to GPU's memory space
+	cudaMemcpy(c, d_c, SIZE*sizeof(int), cudaMemcpyDeviceToHost);
+
+	// Printing out first 10 elements of output vector
+	for(int i=0;i<10; ++i)
+		printf("c[%d] = %d\n", i, c[i]);
+
+	// Freeing memory on CPU
+	free(a);
+	free(b);
+	free(c);
+
+	// Freeing memory on GPU
+	cudaFree(a);
+	cudaFree(b);
+	cudaFree(c);
+
+	return 0;
+}

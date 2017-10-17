@@ -1,0 +1,79 @@
+/* GPU executable code for Vector Addition
+ * UniMem-GPU-Code
+ * Author : Janvijay Singh
+ */
+
+#include <bits/stdc++.h>
+#include <cuda_runtime.h>
+#include <helper_cuda.h>
+#define SIZE 100000000
+#define THREADSPERBLOCK 1024
+
+using namespace std;
+
+clock_t totalTime;
+clock_t processingTime;
+
+// Function to perform Vector Addition
+// Function to be executed on GPU and will be called from the Host
+// Function to be run by many threads in parallel
+// To identify each thread use read-only variable threadIdx.x
+__global__ void VectorAdd(int *a, int *b, int *c, int n)
+{
+	int i = threadIdx.x;
+
+	// To check if current thread Id is less than number of elements in array
+	// To overcome any issues which might occur if number of threads launched turn
+	// out to be grater than number of elements in array
+	if(i<n)
+		c[i] = a[i] + b[i];
+}
+
+int main()
+{
+	cout << "Vector Addition on GPU using Unified Memory Space\n";
+
+	int *a, *b, *c;
+
+	// Memory Allocation in Unified Memory Space
+	cudaMallocManaged(&a, SIZE * sizeof(int));
+	cudaMallocManaged(&b, SIZE * sizeof(int));
+	cudaMallocManaged(&c, SIZE * sizeof(int));
+
+	// Initialization of array 'a', 'b' & 'c'
+	for(int i=0;i<SIZE;i++)
+	{
+		a[i] = i;
+		b[i] = i;
+		c[i] = 0;
+	}
+
+	// Starting total clock count
+	totalTime = clock();
+
+	// Starting processing clock count
+	processingTime = clock();
+
+	// Calling Vector Addition Function
+	VectorAdd<<< 1, THREADSPERBLOCK>>>(a, b, c, SIZE);
+
+	// For synchronizing Device and Host
+	cudaDeviceSynchronize();
+
+	// Printing out clock count after processing
+	cout << "Time utilized in processing : " << double(clock()-processingTime)/CLOCKS_PER_SEC << endl;
+
+	// Printing out total clock count after copy
+	cout << "Total time utilized involving data transfer : " << double(clock()-totalTime)/CLOCKS_PER_SEC << endl;
+
+	// Printing out first 10 elements of output vector
+	for(int i=0;i<20; ++i)
+		printf("c[%d] = %d\n", i, c[i]);
+
+	// Freeing memory in Unified Memory Space
+	cudaFree(a);
+	cudaFree(b);
+	cudaFree(c);
+
+	return 0;
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;VectorAddition&apos; to &apos;VectorAdditionCpyMem&apos;" description="Rename resource &apos;VectorAddition&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/VectorAddition" name="VectorAdditionCpyMem" stamp="1508039803660" updateReferences="true"/>
+</session>

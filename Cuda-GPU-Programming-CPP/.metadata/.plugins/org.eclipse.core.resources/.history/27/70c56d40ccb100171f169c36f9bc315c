@@ -1,0 +1,88 @@
+#include <bits/stdc++.h>
+#include "DeviceArray.h"
+#include "kernel.h"
+
+using namespace std;
+
+clock_t CPUProcessingTime;
+clock_t GPUProcessingTime;
+
+int main()
+{
+	int N = 32;
+	int SIZE = N*N;
+
+	// Allocate Memory on Host
+	vector<float> h_A(SIZE);
+	vector<float> h_B(SIZE);
+	vector<float> h_C(SIZE);
+
+	// Initialize Matrix on Host
+	for(int i=0;i<N;i++)
+	{
+		for(int j=0;j<N;j++)
+		{
+			h_A[i*N+j] = sin(i);
+			h_B[i*N+j] = cos(j);
+		}
+	}
+
+	// Allocate Memory on the device
+	devArray<float> d_A(SIZE);
+	devArray<float> d_B(SIZE);
+	devArray<float> d_C(SIZE);
+
+	// Copying Data from Host Memory to device Memory
+	d_A.set(&h_A[0], SIZE);
+	d_B.set(&h_B[0], SIZE);
+
+	// Initiating clock count
+	GPUProcessingTime = clock();
+
+	// Carrying out Matrix Multiplication on Device
+	matrixMultiplication(d_A.getData(), d_B.getData(), d_C.getData(), N);
+	cudaDeviceSynchronize();
+
+	cout << "Time required to compute Matrix product on GPU : " << double(clock()-GPUProcessingTime)/CLOCKS_PER_SEC << endl;
+
+	// Copying results back to Host from device
+	d_C.get(&h_C[0], SIZE);
+	cudaDeviceSynchronize();
+
+	// Initiating clock count
+	CPUProcessingTime = clock();
+
+	// Temporary variable to store CPU calculated result
+	float *cpu_C;
+	cpu_C = new float[SIZE];
+
+	float sum;
+	for(int row=0;row<N;row++)
+	{
+		for(int col=0;col<N;col++)
+		{
+			sum = 0.0;
+			for(int k=0;k<N;k++)
+			{
+				sum += h_A[row*N+k]*h_B[k*N+col];
+			}
+			cpu_C[row*N+col] = sum;
+		}
+	}
+
+	cout << "Time required to compute Matrix product on CPU : " << double(clock()-CPUProcessingTime)/CLOCKS_PER_SEC << endl;
+
+	// Checking if there is error in CPU and GPU computed Product
+	double err = 0;
+	for(int row=0;row<N;row++)
+	{
+		for(int col=0;col<N;col++)
+		{
+			err += cpu_C[row*N+col] - h_C[row*N+col];
+		}
+	}
+
+	cout << "Error in two computations : " << err << endl;
+
+	return 0;
+}
